@@ -30,7 +30,7 @@ build_kernel()
 		run_cmd cp -r guest host
 	fi
 
-	for V in guest host; do
+	for V in guest ; do
 		# Check if only a "guest" or "host" or kernel build is requested
 		if [ "$kernel_type" != "" ]; then
 			if [ "$kernel_type" != "$V" ]; then
@@ -62,16 +62,19 @@ build_kernel()
 
 		VER="-snp-${V}"
 
-		MAKE="make -C ${V} -j $(getconf _NPROCESSORS_ONLN) LOCALVERSION="
+                MAKE="make -j $(getconf _NPROCESSORS_ONLN) LOCALVERSION="
 
+		pushd ${V}
 		run_cmd $MAKE distclean
+		popd
 
-		pushd ${V} >/dev/null
+		pushd ${V}
 			run_cmd git fetch current
 			run_cmd git checkout current/${BRANCH}
 			COMMIT=$(git log --format="%h" -1 HEAD)
 
-			run_cmd "cp /boot/config-$(uname -r) .config"
+			#run_cmd "cp /boot/config-$(uname -r) .config"
+			run_cmd "cp /amdsev/minimal.config .config"
 			run_cmd ./scripts/config --set-str LOCALVERSION "$VER-$COMMIT"
 			run_cmd ./scripts/config --disable LOCALVERSION_AUTO
 			run_cmd ./scripts/config --enable  EXPERT
@@ -124,12 +127,14 @@ build_kernel()
 			run_cmd ./scripts/config --module MLXFW
 
 			run_cmd echo $COMMIT >../../source-commit.kernel.$V
-		popd >/dev/null
+		popd
 
-		yes "" | $MAKE olddefconfig
+		#$MAKE olddefconfig
+		yes "" | bash -c "$MAKE olddefconfig"
 
-		# Build 
-		run_cmd $MAKE >/dev/null
+		# Build
+		pushd ${V}
+		run_cmd $MAKE
 
 		if [ "$ID" = "debian" ] || [ "$ID_LIKE" = "debian" ]; then
 			run_cmd $MAKE bindeb-pkg
@@ -137,6 +142,7 @@ build_kernel()
 			run_cmd $MAKE "RPMOPTS='--define \"_rpmdir .\"'" binrpm-pkg
 			run_cmd mv ${V}/x86_64/*.rpm .
 		fi
+		popd
 	done
 
 	popd
