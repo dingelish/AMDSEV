@@ -221,9 +221,32 @@ build_install_qemu()
 	pushd qemu >/dev/null
 		run_cmd git fetch current
 		run_cmd git checkout current/${QEMU_BRANCH}
-		run_cmd ./configure --target-list=x86_64-softmmu --prefix=$DEST
+		run_cmd ./configure --target-list=x86_64-softmmu \
+                                    --disable-gnutls \
+                                    --disable-docs \
+                                    --disable-xkbcommon \
+                                    --disable-rdma \
+                                    --disable-tools \
+                                    --disable-guest-agent \
+                                    --disable-opengl \
+                                    --disable-spice \
+                                    --disable-bsd-user \
+                                    --disable-linux-aio \
+                                    --disable-gtk \
+                                    --disable-vnc-jpeg \
+                                    --disable-libnfs \
+                                    --disable-gtk --disable-sdl --disable-opengl \
+                                    --without-default-features \
+                                    --enable-kvm \
+                                    --enable-attr \
+                                    --enable-bpf \
+                                    --enable-linux-io-uring \
+                                    --enable-netmap \
+                                    --enable-vhost-net \
+                                    --static \
+                                    --prefix=$DEST
+		#run_cmd ./configure --target-list=x86_64-softmmu --disable-bsd-user --disable-guest-agent --disable-strip --disable-werror --disable-gcrypt --disable-debug-info --disable-debug-tcg --enable-docs --disable-tcg-interpreter --enable-attr --disable-brlapi --disable-linux-aio --disable-bzip2 --disable-bluez --disable-cap-ng --disable-curl --disable-fdt --disable-glusterfs --disable-gnutls --disable-nettle --disable-gtk --disable-rdma --disable-libiscsi --disable-vnc-jpeg --disable-kvm --disable-lzo --disable-curses --disable-libnfs --disable-numa --disable-opengl --disable-vnc-png --disable-rbd --disable-vnc-sasl --disable-sdl --disable-seccomp --disable-smartcard --disable-snappy --disable-spice --disable-libssh2 --disable-libusb --disable-usb-redir --disable-vde --disable-vhost-net --disable-virglrenderer --disable-virtfs --disable-vnc --disable-vte --disable-xen --disable-xen-pci-passthrough --disable-xfsctl --enable-linux-user --disable-system --disable-blobs --disable-tools --static --disable-pie --prefix=$DEST
 		run_cmd $MAKE
-		run_cmd $MAKE install
 
 		COMMIT=$(git log --format="%h" -1 HEAD)
 		run_cmd echo $COMMIT >../source-commit.qemu
